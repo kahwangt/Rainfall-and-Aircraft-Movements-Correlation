@@ -1,0 +1,1302 @@
+<html>
+    <head>
+        <title>Data Visualisation Final Project</title>
+        <style>
+            .path {
+                fill: none;
+                stroke: orange;
+                stroke-width: 2px;
+                 }
+            .toolTip {
+                position: absolute;
+                display: none;
+                min-width: 50px;
+                height: auto;
+                background: none repeat scroll 0 0 #ffffff;
+                border: 1px solid #6F257F;
+                padding: 10px;
+                text-align: center;
+                font-size: 12px;
+                }
+            .bar {
+                fill:steelblue;
+            }
+            #filter1{
+	           position:absolute;
+	           top:20px;
+	           left:15px;
+                }
+            #button1{
+                position:absolute;
+                top:20px;
+                left:1075px;
+                background-color:#f2f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+            #button2{
+                position:absolute;
+                top:20px;
+                left:1110px;
+                background-color:#f2f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+            #button3{
+                position:absolute;
+                top:20px;
+                left:1145px;
+                background-color:#f2f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+            #button4{
+                position:absolute;
+                top:20px;
+                left:1180px;
+                background-color:#f2f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+            #button5{
+                position:absolute;
+                top:20px;
+                left:1215px;
+                background-color:#f1f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+            #button6{
+                position:absolute;
+                top:552px;
+                left:1213px;
+                background-color:#f1f2f2;
+                text-align:center;
+                border-radius: 5px;
+                font-size: 20px;
+                font-weight: bold;
+                }
+        </style>
+    </head>
+    <body>
+        <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1"> 
+        </svg>
+        <div id="filter1">
+            <b>Location:</b>
+        </div>
+        <div id="button1">
+             <button>Q1</button>
+        </div>
+        <div id="button2">
+             <button>Q2</button>
+        </div>
+        <div id="button3">
+             <button>Q3</button>
+        </div>
+        <div id="button4">
+             <button>Q4</button>
+        </div>
+        <div id="button5">
+             <button>Clear</button>
+        </div>
+        <div id="button6">
+             <button>Reset</button>
+        </div>
+        
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+
+        <script>
+            window.onload = function(){
+                // Create a SVG canvas
+                var thisCanvas = d3.select("svg")
+                    .attr("width", 1260)
+                    .attr("height", 580)
+                    .attr("class", "svgCanvas");
+                var margin = {top: 80, right: 880, bottom: 280, left: 80},
+                    width = 1260 - margin.left - margin.right,
+                    height = 580 - margin.top - margin.bottom;
+                // Create a tooltip
+                var tooltip = d3.select("body")
+                    .append("div")
+                    .attr("class", "toolTip");  
+                // For formatting tooltip to 1 decimal place
+                var formatDecimal = d3.format(".1f");
+                // Create a filter
+                var dropDownlocation = d3.select("#filter1").append("select")
+                    .attr("Location", "Location-List");
+                // Add title
+                thisCanvas.append("text")
+                    .attr("x",630)
+                    .attr("y",30)
+                    .attr("text-anchor","middle")
+                    .style("font-size","25px")
+                    .text("Correlation between Aircraft Movements & Rainfall from 2011 to 2016");
+                // Add description for location filter
+                thisCanvas.append("text")
+                    .attr("x",18)
+                    .attr("y",8)
+                    .attr("text-anchor","left")
+                    .style("font-size","12px")
+                    .style("font-style","italic")
+                    .text("Select from list to filter location");
+                // Add description for quarter buttons
+                thisCanvas.append("text")
+                    .attr("x",1160)
+                    .attr("y",8)
+                    .attr("text-anchor","middle")
+                    .style("font-size","12px")
+                    .style("font-style","italic")
+                    .text("Click on buttons to highlight quarter");
+                // Add description for reset button
+                thisCanvas.append("text")
+                    .attr("x",1162)
+                    .attr("y",577)
+                    .attr("text-anchor","middle")
+                    .style("font-size","12px")
+                    .style("font-style","italic")
+                    .text("Click to reset to initial overall graphs");
+                // Add brief description for this visualisation
+                thisCanvas.append("text")
+                    .attr("x",18)
+                    .attr("y",566)
+                    .attr("text-anchor","left")
+                    .style("font-size","12px")
+                    .style("font-style","italic")
+                    .text("The purpose of this visualisation is to highlight a drop in rainfall in February also saw a drop in aircraft movements across 2011 to 2016.")
+                    .append("thisCanvas:tspan") 
+                    .attr("x",18)
+                    .attr("y",577)
+                    .text("Highlight Q1 data by clicking Q1 on the top right. Filter the locations on the top left and notice the pattern was observed in Brisbane, Gold Coast and Tasmania.");
+                
+                
+                // Drawing 2011 chart       
+                var ybar1 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar1 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline1 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline1 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph1 = d3.line()
+                    .x(function(d){return xline1(d.key)+65;})
+                    .y(function(d){return yline1(+d.value.Total)+50;});
+                
+                // Drawing 2012 chart       
+                var ybar2 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar2 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline2 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline2 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph2 = d3.line()
+                    .x(function(d){return xline2(d.key)+495;})
+                    .y(function(d){return yline2(+d.value.Total)+50;});
+                
+                // Drawing 2013 chart       
+                var ybar3 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar3 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline3 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline3 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph3 = d3.line()
+                    .x(function(d){return xline2(d.key)+912;})
+                    .y(function(d){return yline2(+d.value.Total)+50;});
+                
+                // Drawing 2014 chart       
+                var ybar4 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar4 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline4 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline4 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph4 = d3.line()
+                    .x(function(d){return xline4(d.key)+65;})
+                    .y(function(d){return yline4(+d.value.Total)+300;});
+                
+                // Drawing 2015 chart       
+                var ybar5 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar5 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline5 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline5 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph5 = d3.line()
+                    .x(function(d){return xline5(d.key)+495;})
+                    .y(function(d){return yline5(+d.value.Total)+300;});
+                
+                // Drawing 2016 chart       
+                var ybar6 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var xbar6 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var xline6 = d3.scaleBand()
+			         .rangeRound([0, width]);
+                var yline6 = d3.scaleLinear()
+                    .rangeRound([height, 0]);
+                var linegraph6 = d3.line()
+                    .x(function(d){return xline5(d.key)+912;})
+                    .y(function(d){return yline5(+d.value.Total)+300;});
+            
+            // reading in data    
+            d3.csv("overalldata.csv", function(data){
+                // getting individual year data
+                var data2011 = data.filter(function(d){return d.Year == 2011;});
+                var data2012 = data.filter(function(d){return d.Year == 2012;});
+                var data2013 = data.filter(function(d){return d.Year == 2013;});
+                var data2014 = data.filter(function(d){return d.Year == 2014;});
+                var data2015 = data.filter(function(d){return d.Year == 2015;});
+                var data2016 = data.filter(function(d){return d.Year == 2016;});
+
+                // nesting of individual years data to plot only 12 bars (i.e. Jan to Dec for all years)
+                var onesteddata2011 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2011);
+                var onesteddata2012 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2012);
+                var onesteddata2013 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2013);
+                var onesteddata2014 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2014);
+                var onesteddata2015 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2015);
+                var onesteddata2016 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(data2016);
+                ////////////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2011 graph
+                // to find maximum range for bar chart y-axis, i.e. total rainfall
+                var initialgraph = function(){
+                onesteddata2011.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar1.domain(onesteddata2011.map(function(d){return d.key}));
+                ybar1.domain([0,d3.max(onesteddata2011,function(d){return d.value.Rainfall+200;})]);
+                // to find maximum range for line graph y-axis, i.e. total aircraft movements
+                onesteddata2011.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline1.domain(onesteddata2011.map(function(d){return d.key}));
+                yline1.domain([0,d3.max(onesteddata2011,function(d){return d.value.Total+10000;})]);
+                
+                // plotting the bar chart
+                thisCanvas.selectAll(".bar1")
+                    .data(onesteddata2011)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar1(d.key)+55;})
+                    .attr("width",(xbar1.bandwidth()/2))
+                    .attr("y",function(d){return ybar1(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar1(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path1")
+                          .data([onesteddata2011])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph1);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon1")
+                          .data(onesteddata2011)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline1(d.key)+55;})
+                          .attr("y", function(d, i) {return yline1(d.value.Total)+40;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 50 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar1));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 50 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar1));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 350 + "," + 50 +" )")
+                    .call(d3.axisRight(yline1));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 200 + " ," + 300 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Data Period - 2011")
+                    .style("font-size","13px");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 5)
+                    .attr("x",0 - 150)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Rainfall")
+                    .style("font-size","13px"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px")
+                    .attr("transform", "translate(400,150) rotate(90)"); 
+                ///////////////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2012 graph
+                // to find maximum range for y-axis for bar chart, i.e. total rainfall
+                onesteddata2012.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar2.domain(onesteddata2012.map(function(d){return d.key}));
+                ybar2.domain([0,d3.max(onesteddata2012,function(d){return d.value.Rainfall+400;})]);
+                
+                // to find maximum range for y-axis line graph, i.e. total aircraft movements
+                onesteddata2012.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline2.domain(onesteddata2012.map(function(d){return d.key}));
+                yline2.domain([0,d3.max(onesteddata2012,function(d){return d.value.Total+10000;})]);
+                
+               // plotting the bar chart
+                thisCanvas.selectAll(".bar2")
+                    .data(onesteddata2012)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar2(d.key)+485;})
+                    .attr("width",(xbar2.bandwidth()/2))
+                    .attr("y",function(d){return ybar2(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar2(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path2")
+                          .data([onesteddata2012])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph2);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon2")
+                          .data(onesteddata2012)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline2(d.key)+485;})
+                          .attr("y", function(d, i) {return yline2(d.value.Total)+40;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 480 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar2));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 480 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar2));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 780 + "," + 50 +" )")
+                    .call(d3.axisRight(yline2));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 630 + " ," + 300 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Data Period - 2012")
+                    .style("font-size","13px");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 425)
+                    .attr("x",0 - 150)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Rainfall")
+                    .style("font-size","13px"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .attr("transform", "translate(825,150) rotate(90)")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px"); 
+                ////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2013 graph
+                // to find maximum range for y-axis for bar chart, i.e. total rainfall
+                onesteddata2013.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar3.domain(onesteddata2013.map(function(d){return d.key}));
+                ybar3.domain([0,d3.max(onesteddata2013,function(d){return d.value.Rainfall+250;})]);
+                
+                // to find maximum range for y-axis line graph, i.e. total aircraft movements
+                onesteddata2013.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline3.domain(onesteddata2013.map(function(d){return d.key}));
+                yline3.domain([0,d3.max(onesteddata2013,function(d){return d.value.Total+10000;})]);
+                
+               // plotting the bar chart
+                thisCanvas.selectAll(".bar3")
+                    .data(onesteddata2013)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar3(d.key)+905;})
+                    .attr("width",(xbar3.bandwidth()/2))
+                    .attr("y",function(d){return ybar3(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar3(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path3")
+                          .data([onesteddata2013])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph3);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon3")
+                          .data(onesteddata2013)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline3(d.key)+905;})
+                          .attr("y", function(d, i) {return yline3(d.value.Total)+40;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                        
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 900 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar3));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 900 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar3));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " +1200 + "," + 50 +" )")
+                    .call(d3.axisRight(yline3));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 1050 + " ," + 300 + ")")
+                    .style("text-anchor", "middle")
+                    .style("font-size","13px")
+                    .text("Data Period - 2013");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 845)
+                    .attr("x",0 - 150)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .style("font-size","13px")
+                    .text("Rainfall"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .attr("transform", "translate(1250,150) rotate(90)")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px");
+                
+                                ////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2014 graph
+                // to find maximum range for y-axis for bar chart, i.e. total rainfall
+                onesteddata2014.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar4.domain(onesteddata2014.map(function(d){return d.key}));
+                ybar4.domain([0,d3.max(onesteddata2014,function(d){return d.value.Rainfall+200;})]);
+                
+                // to find maximum range for y-axis line graph, i.e. total aircraft movements
+                onesteddata2014.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline4.domain(onesteddata2014.map(function(d){return d.key}));
+                yline4.domain([0,d3.max(onesteddata2014,function(d){return d.value.Total+10000;})]);
+                
+                // plotting the bar chart
+                thisCanvas.selectAll(".bar4")
+                    .data(onesteddata2014)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar4(d.key)+55;})
+                    .attr("width",(xbar4.bandwidth()/2))
+                    .attr("y",function(d){return ybar4(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar4(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path4")
+                          .data([onesteddata2014])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph4);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon4")
+                          .data(onesteddata2014)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline4(d.key)+55;})
+                          .attr("y", function(d, i) {return yline4(d.value.Total)+295;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 50 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar4));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 50 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar4));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 350 + "," + 300 +" )")
+                    .call(d3.axisRight(yline4));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 200 + " ," + 550 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Data Period - 2014")
+                    .style("font-size","13px");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 5)
+                    .attr("x",0 - 420)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Rainfall")
+                    .style("font-size","13px"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .attr("transform", "translate(400,420) rotate(90)")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px");
+                
+                ////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2015 graph
+                // to find maximum range for y-axis bar chart, i.e. total rainfall
+                onesteddata2015.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar5.domain(onesteddata2015.map(function(d){return d.key}));
+                ybar5.domain([0,d3.max(onesteddata2015,function(d){return d.value.Rainfall+400;})]);
+                
+                // to find maximum range for y-axis line graph, i.e. total aircraft movements
+                onesteddata2015.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline5.domain(onesteddata2015.map(function(d){return d.key}));
+                yline5.domain([0,d3.max(onesteddata2015,function(d){return d.value.Total+10000;})]);
+                
+                // plotting the bar chart
+                thisCanvas.selectAll(".bar5")
+                    .data(onesteddata2015)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar5(d.key)+485;})
+                    .attr("width",(xbar5.bandwidth()/2))
+                    .attr("y",function(d){return ybar5(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar5(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path5")
+                          .data([onesteddata2015])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph5);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon5")
+                          .data(onesteddata2015)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline5(d.key)+485;})
+                          .attr("y", function(d, i) {return yline5(d.value.Total)+295;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 480 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar5));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 480 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar5));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 780 + "," + 300 +" )")
+                    .call(d3.axisRight(yline5));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 630 + " ," + 550 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Data Period - 2015")
+                    .style("font-size","13px");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 425)
+                    .attr("x",0 - 420)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Rainfall")
+                    .style("font-size","13px"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .attr("transform", "translate(825,420) rotate(90)")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px");
+                
+                ////////////////////////////////////////////////////////////////////////////////////////
+                // Plotting 2016 graph
+                // to find maximum range for y-axis bar chart, i.e. total rainfall
+                onesteddata2016.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                // scale the range of both x and y axis
+                xbar6.domain(onesteddata2016.map(function(d){return d.key}));
+                ybar6.domain([0,d3.max(onesteddata2016,function(d){return d.value.Rainfall+320;})]);
+                
+                // to find maximum range for y-axis line graph, i.e. total aircraft movements
+                onesteddata2016.forEach(function(d){d.value.Total = +d.value.Total;});
+                xline6.domain(onesteddata2016.map(function(d){return d.key}));
+                yline6.domain([0,d3.max(onesteddata2016,function(d){return d.value.Total+10000;})]);
+                
+                // plotting the bar chart
+                thisCanvas.selectAll(".bar6")
+                    .data(onesteddata2016)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar6(d.key)+905;})
+                    .attr("width",(xbar6.bandwidth()/2))
+                    .attr("y",function(d){return ybar6(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar6(d.value.Rainfall);});
+                
+                // plotting the line graph
+                thisCanvas.selectAll(".path6")
+                          .data([onesteddata2016])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph6);
+                
+                // plotting the airplane symbol on the line graph
+                thisCanvas.selectAll(".icon6")
+                          .data(onesteddata2016)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline6(d.key)+905;})
+                          .attr("y", function(d, i) {return yline6(d.value.Total)+295;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")});
+                    
+                // showing the x-axis labels
+                thisCanvas.append("g")
+                    .attr("transform","translate(" + 900 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar6));
+                
+                // showing the y-axis for bar chart
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 900 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar6));
+                
+                // showing the y-axis for line graph
+                thisCanvas.append("g")
+                    .attr("transform", "translate( " + 1200 + "," + 300 +" )")
+                    .call(d3.axisRight(yline6));
+                
+                // text label for the x-axis (i.e. Data Period)
+                thisCanvas.append("text")             
+                    .attr("transform","translate(" + 1050 + " ," + 550 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Data Period - 2016")
+                    .style("font-size","13px");
+                
+                // text label for the y-axis for bar chart (i.e. Rainfall)
+                thisCanvas.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 845)
+                    .attr("x",0 - 420)
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text("Rainfall")
+                    .style("font-size","13px"); 
+                
+                // text label for the y-axis for line graph (i.e. Aircraft Movements)
+                thisCanvas.append("text")
+                    .attr("transform", "translate(1250,420) rotate(90)")
+                    .style("text-anchor", "middle")
+                    .text("Aircraft Movements")
+                    .style("font-size","13px");
+                };
+                // initialgraph function to plot initial graph and for reset button usage
+                initialgraph();
+                
+                
+                ///////////////////////////////////////////////////////////////////////////////////////
+                // interactive portions
+                // Create drop down menu for location filter
+                var optionslocation = dropDownlocation.selectAll("option")
+                                      .data(d3.map(data,function (d){return d.Airport;}).keys())
+                                      .enter().append("option")
+                                      .text(function (d) { return d; })
+                                      .attr("value", function (d) { return d; });
+                
+                // Drop down filter for Location
+                // Appending new data based on user's choice in location filter
+                dropDownlocation.on("change", function() {
+                    var selected = this.value;
+                    newdata2011 = data.filter(function(d){return d.Airport == selected && d.Year == 2011;});
+                    nesteddata2011 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2011);
+                    newdata2012 = data.filter(function(d){return d.Airport == selected && d.Year == 2012;});
+                    nesteddata2012 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2012);
+                    newdata2013 = data.filter(function(d){return d.Airport == selected && d.Year == 2013;});
+                    nesteddata2013 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2013);
+                    newdata2014 = data.filter(function(d){return d.Airport == selected && d.Year == 2014;});
+                    nesteddata2014 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2014);
+                    newdata2015 = data.filter(function(d){return d.Airport == selected && d.Year == 2015;});
+                    nesteddata2015 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2015);
+                    newdata2016 = data.filter(function(d){return d.Airport == selected && d.Year == 2016;});
+                    nesteddata2016 = d3.nest().key(function(d){return d.Month;})
+		                          .rollup(function(leaves){
+                                      var Total = d3.sum(leaves, function(d){return d.Total;})
+                                      var Rainfall = d3.sum(leaves, function(d){return d.Rainfall;})
+                                    return {Total:Total, Rainfall:Rainfall};})
+	                             .entries(newdata2016);
+                    
+                    // Altering the axis for all 6 charts
+                    thisCanvas.selectAll("g").remove();
+                    nesteddata2011.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar1.domain(nesteddata2011.map(function(d){return d.key}));
+                    ybar1.domain([0,d3.max(nesteddata2011,function(d){return d.value.Rainfall+320;})]);
+                    nesteddata2011.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline1.domain(nesteddata2011.map(function(d){return d.key}));
+                    yline1.domain([0,d3.max(nesteddata2011,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 50 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar1));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 50 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar1));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 350 + "," + 50 +" )")
+                    .call(d3.axisRight(yline1));
+                    nesteddata2012.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar2.domain(nesteddata2012.map(function(d){return d.key}));
+                    ybar2.domain([0,d3.max(nesteddata2012,function(d){return d.value.Rainfall+500;})]);
+                    nesteddata2012.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline2.domain(nesteddata2012.map(function(d){return d.key}));
+                    yline2.domain([0,d3.max(nesteddata2012,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 480 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar2));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 480 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar2));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 780 + "," + 50 +" )")
+                    .call(d3.axisRight(yline2));
+                    nesteddata2013.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar3.domain(nesteddata2013.map(function(d){return d.key}));
+                    ybar3.domain([0,d3.max(nesteddata2013,function(d){return d.value.Rainfall+450;})]);
+                    nesteddata2013.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline3.domain(nesteddata2013.map(function(d){return d.key}));
+                    yline3.domain([0,d3.max(nesteddata2013,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 900 + " ," + 270 + ")")
+                    .call(d3.axisBottom(xbar3));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 900 + "," + 50 +" )")
+                    .call(d3.axisLeft(ybar3));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " +1200 + "," + 50 +" )")
+                    .call(d3.axisRight(yline3));
+                    nesteddata2014.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar4.domain(nesteddata2014.map(function(d){return d.key}));
+                    ybar4.domain([0,d3.max(nesteddata2014,function(d){return d.value.Rainfall+300;})]);
+                    nesteddata2014.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline4.domain(nesteddata2014.map(function(d){return d.key}));
+                    yline4.domain([0,d3.max(nesteddata2014,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 50 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar4));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 50 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar4));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 350 + "," + 300 +" )")
+                    .call(d3.axisRight(yline4));
+                    nesteddata2015.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar5.domain(nesteddata2015.map(function(d){return d.key}));
+                    ybar5.domain([0,d3.max(nesteddata2015,function(d){return d.value.Rainfall+400;})]);
+                    nesteddata2015.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline5.domain(nesteddata2015.map(function(d){return d.key}));
+                    yline5.domain([0,d3.max(nesteddata2015,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 480 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar5));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 480 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar5));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 780 + "," + 300 +" )")
+                    .call(d3.axisRight(yline5));
+                    nesteddata2016.forEach(function(d){d.value.Rainfall = +d.value.Rainfall;});
+                    xbar6.domain(nesteddata2016.map(function(d){return d.key}));
+                    ybar6.domain([0,d3.max(nesteddata2016,function(d){return d.value.Rainfall+400;})]);
+                    nesteddata2016.forEach(function(d){d.value.Total = +d.value.Total;});
+                    xline6.domain(nesteddata2016.map(function(d){return d.key}));
+                    yline6.domain([0,d3.max(nesteddata2016,function(d){return d.value.Total+2000;})]);
+                    thisCanvas.append("g")
+                    .attr("transform","translate(" + 900 + " ," + 520 + ")")
+                    .call(d3.axisBottom(xbar6));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 900 + "," + 300 +" )")
+                    .call(d3.axisLeft(ybar6));
+                    thisCanvas.append("g")
+                    .attr("transform", "translate( " + 1200 + "," + 300 +" )")
+                    .call(d3.axisRight(yline6));
+                    // Plotting the bar charts
+                    thisCanvas.selectAll(".bar").remove();
+                    thisCanvas.selectAll(".bar1")
+                    .data(nesteddata2011)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar1(d.key)+55;})
+                    .attr("width",(xbar1.bandwidth()/2))
+                    .attr("y",function(d){return ybar1(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar1(d.value.Rainfall);});
+                    thisCanvas.selectAll(".bar2")
+                    .data(nesteddata2012)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar2(d.key)+485;})
+                    .attr("width",(xbar2.bandwidth()/2))
+                    .attr("y",function(d){return ybar2(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar2(d.value.Rainfall);});
+                    thisCanvas.selectAll(".bar3")
+                    .data(nesteddata2013)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar3(d.key)+905;})
+                    .attr("width",(xbar3.bandwidth()/2))
+                    .attr("y",function(d){return ybar3(d.value.Rainfall)+50;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar3(d.value.Rainfall);});
+                    thisCanvas.selectAll(".bar4")
+                    .data(nesteddata2014)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar4(d.key)+55;})
+                    .attr("width",(xbar4.bandwidth()/2))
+                    .attr("y",function(d){return ybar4(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar4(d.value.Rainfall);});
+                    thisCanvas.selectAll(".bar5")
+                    .data(nesteddata2015)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar5(d.key)+485;})
+                    .attr("width",(xbar5.bandwidth()/2))
+                    .attr("y",function(d){return ybar5(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar5(d.value.Rainfall);});
+                    thisCanvas.selectAll(".bar6")
+                    .data(nesteddata2016)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x",function(d){return xbar6(d.key)+905;})
+                    .attr("width",(xbar6.bandwidth()/2))
+                    .attr("y",function(d){return ybar6(d.value.Rainfall)+300;})
+                    .on("mouseover", function(thisElement){
+                        tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Rainfall Amount: " + formatDecimal(thisElement.value.Rainfall));})
+                    .on("mouseout", function(thisElement){
+                        tooltip.style("display", "none")})
+                    .transition().duration(500)
+                    .attr("height", function(d){return 220 - ybar6(d.value.Rainfall);});
+                    // Altering the line graph after selection on airport
+                    thisCanvas.selectAll(".path").remove();
+                    thisCanvas.selectAll(".path1")
+                          .data([nesteddata2011])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph1);
+                    thisCanvas.selectAll(".path2")
+                          .data([nesteddata2012])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph2);
+                    thisCanvas.selectAll(".path3")
+                          .data([nesteddata2013])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph3);
+                    thisCanvas.selectAll(".path4")
+                          .data([nesteddata2014])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph4);
+                    thisCanvas.selectAll(".path5")
+                          .data([nesteddata2015])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph5);
+                    thisCanvas.selectAll(".path6")
+                          .data([nesteddata2016])
+                          .enter().append("path")
+                          .attr("class","path")
+                          .attr("d",linegraph6);
+               // Altering the airplane symbols after selection on airport
+                thisCanvas.selectAll(".icon").remove();
+                thisCanvas.selectAll(".icon1")
+                          .data(nesteddata2011)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline1(d.key)+55;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000).delay(200)
+                          .attr("y", function(d, i) {return yline1(d.value.Total)+40;});
+                thisCanvas.selectAll(".icon2")
+                          .data(nesteddata2012)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline2(d.key)+485;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000).delay(200)
+                          .attr("y", function(d, i) {return yline2(d.value.Total)+40;});
+                thisCanvas.selectAll(".icon3")
+                          .data(nesteddata2013)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline3(d.key)+905;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000).delay(200)
+                          .attr("y", function(d, i) {return yline3(d.value.Total)+40;}) ;
+                thisCanvas.selectAll(".icon4")
+                          .data(nesteddata2014)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline4(d.key)+55;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000)
+                          .attr("y", function(d, i) {return yline4(d.value.Total)+295;});
+                thisCanvas.selectAll(".icon5")
+                          .data(nesteddata2015)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline5(d.key)+485;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000)
+                          .attr("y", function(d, i) {return yline5(d.value.Total)+295;});
+                thisCanvas.selectAll(".icon6")
+                          .data(nesteddata2016)
+                          .enter().append("image")
+                          .attr("xlink:href", "https://image.freepik.com/free-icon/aircraft-symbol_318-10383.jpg")
+                          .attr("width", 12)
+                          .attr("height", 12)
+                          .attr("class", "icon")
+                          .attr("x", function(d, i) {return xline6(d.key)+905;})
+                          .on("mouseover", function(thisElement){
+                            tooltip.style("left", d3.event.pageX - 50 + "px")
+                               .style("top", d3.event.pageY - 70 + "px")
+                               .style("display", "inline-block")
+                               .html("Aircraft Movements: " + (thisElement.value.Total));})
+                          .on("mouseout", function(thisElement){
+                                tooltip.style("display", "none")})
+                          .transition().duration(1000)
+                          .attr("y", function(d, i) {return yline6(d.value.Total)+295;});
+                    
+                });
+                
+                
+                // Buttons filter for Quarter - Quarter 1
+                d3.select("#button1").on("click",function(){
+                    thisCanvas.selectAll(".bar").select(function(d){
+                        if (d.key=="Jan" || d.key=="Feb" || d.key=="Mar") {return this;} })
+                              .style("fill","indianred");})
+                // Buttons filter for Quarter - Quarter 2
+                d3.select("#button2").on("click",function(){
+                    thisCanvas.selectAll(".bar").select(function(d){
+                        if (d.key=="Apr" || d.key=="May" || d.key=="Jun") {return this;} })
+                              .style("fill","indianred");})
+                // Buttons filter for Quarter - Quarter 3
+                d3.select("#button3").on("click",function(){
+                    thisCanvas.selectAll(".bar").select(function(d){
+                        if (d.key=="Jul" || d.key=="Aug" || d.key=="Sep") {return this;} })
+                              .style("fill","indianred");})
+                // Buttons filter for Quarter - Quarter 4
+                d3.select("#button4").on("click",function(){
+                    thisCanvas.selectAll(".bar").select(function(d){
+                        if (d.key=="Oct" || d.key=="Nov" || d.key=="Dec") {return this;} })
+                              .style("fill","indianred");})
+                // Buttons filter for Quarter - Clear
+                d3.select("#button5").on("click",function(){
+                    thisCanvas.selectAll(".bar")
+                              .style("fill","steelblue");})
+                
+                // Button to reset everything to default - Reset
+                d3.select("#button6").on("click",function(){
+                    thisCanvas.selectAll("g").remove();
+                    thisCanvas.selectAll(".bar").remove();
+                    thisCanvas.selectAll(".path").remove();
+                    thisCanvas.selectAll(".icon").remove();
+                    initialgraph();})
+                });
+            };
+        </script>
+    </body>
+</html>
